@@ -89,7 +89,7 @@
     .amount-expense { color: var(--expense); }
     .amount-income { color: var(--income); }
 
-    .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 65px; background-color: var(--bg-main); border-top: 1px solid var(--border); display: flex; justify-around: space-around; align-items: center; z-index: 20; padding-bottom: 5px; }
+    .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 65px; background-color: var(--bg-main); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 20; padding-bottom: 5px; }
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; color: var(--text-sub); font-size: 0.7rem; font-weight: 600; cursor: pointer; width: 20%; }
     .nav-item.active { color: var(--primary-dark); }
     .fab { width: 52px; height: 52px; border-radius: 50%; background-color: var(--primary); color: #FFFFFF; border: none; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(245, 166, 35, 0.4); margin-top: -20px; }
@@ -237,16 +237,17 @@
           <div class="section-title">1.1 Perfil & Presupuesto</div>
           <div class="form-group" style="margin-bottom:8px;">
             <label>Nombre Persona 1</label>
-            <input type="text" id="cfg-p1" class="form-control" value="Jonathan" onchange="saveSettings()">
+            <input type="text" id="cfg-p1" class="form-control">
           </div>
           <div class="form-group" style="margin-bottom:8px;">
             <label>Nombre Persona 2</label>
-            <input type="text" id="cfg-p2" class="form-control" value="Pareja" onchange="saveSettings()">
+            <input type="text" id="cfg-p2" class="form-control">
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:12px;">
             <label>Presupuesto Mensual Total ($)</label>
-            <input type="number" id="cfg-budget" class="form-control" value="1500" onchange="saveSettings()">
+            <input type="number" id="cfg-budget" class="form-control">
           </div>
+          <button class="btn-submit" style="padding:10px; font-size:0.85rem;" onclick="saveSettingsToDB()">💾 Guardar en Base de Datos</button>
         </div>
 
         <div class="card" id="goals-anchor">
@@ -454,9 +455,9 @@
     let transactions = [];
     let goals = [];
     let config = {
-      p1: localStorage.getItem('cfg_p1') || 'Jonathan',
-      p2: localStorage.getItem('cfg_p2') || 'Pareja',
-      budget: parseFloat(localStorage.getItem('cfg_budget')) || 1500.00
+      p1: 'Jonathan',
+      p2: 'Pareja',
+      budget: 1500.00
     };
 
     let currentTxForm = { id: null, type: 'GASTO', amountStr: '0', categoryId: 'cat_1', paidBy: '' };
@@ -465,7 +466,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('tx-date').value = new Date().toISOString().substring(0, 10);
-      loadLocalSettings();
+      fetchSettings();
       fetchTransactions();
       fetchGoals();
 
@@ -473,6 +474,7 @@
       db.channel('public:db_changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => fetchTransactions())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, () => fetchGoals())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'app_config' }, () => fetchSettings())
         .subscribe((status) => {
           const badge = document.getElementById('sync-status');
           if (status === 'SUBSCRIBED') {
@@ -483,31 +485,49 @@
         });
     });
 
-    function loadLocalSettings() {
-      document.getElementById('cfg-p1').value = config.p1;
-      document.getElementById('cfg-p2').value = config.p2;
-      document.getElementById('cfg-budget').value = config.budget;
-      document.getElementById('app-title-names').textContent = `${config.p1} & ${config.p2}`;
-      
+    /* Configuración desde Supabase */
+    async function fetchSettings() {
+      const { data, error } = await db.from('app_config').select('*').eq('id', 'default').single();
+      if (!error && data) {
+        config.p1 = data.p1 || 'Jonathan';
+        config.p2 = data.p2 || 'Pareja';
+        config.budget = parseFloat(data.budget) || 0;
+
+        document.getElementById('cfg-p1').value = config.p1;
+        document.getElementById('cfg-p2').value = config.p2;
+        document.getElementById('cfg-budget').value = config.budget;
+
+        document.getElementById('app-title-names').textContent = `${config.p1} & ${config.p2}`;
+        renderPayerChips();
+        renderDashboard();
+      } else {
+        document.getElementById('app-title-names').textContent = `${config.p1} & ${config.p2}`;
+        renderPayerChips();
+      }
+
       const customCats = localStorage.getItem('custom_categories');
       if (customCats) categories = JSON.parse(customCats);
-      
       populateCategoryDropdowns();
-      renderPayerChips();
     }
 
-    function saveSettings() {
-      config.p1 = document.getElementById('cfg-p1').value || 'Persona 1';
-      config.p2 = document.getElementById('cfg-p2').value || 'Persona 2';
-      config.budget = parseFloat(document.getElementById('cfg-budget').value) || 0;
+    async function saveSettingsToDB() {
+      const p1 = document.getElementById('cfg-p1').value.trim() || 'Persona 1';
+      const p2 = document.getElementById('cfg-p2').value.trim() || 'Persona 2';
+      const budget = parseFloat(document.getElementById('cfg-budget').value) || 0;
 
-      localStorage.setItem('cfg_p1', config.p1);
-      localStorage.setItem('cfg_p2', config.p2);
-      localStorage.setItem('cfg_budget', config.budget);
+      const { error } = await db.from('app_config').upsert({
+        id: 'default',
+        p1: p1,
+        p2: p2,
+        budget: budget
+      });
 
-      document.getElementById('app-title-names').textContent = `${config.p1} & ${config.p2}`;
-      renderPayerChips();
-      renderDashboard();
+      if (error) {
+        alert('Error al guardar: ' + error.message);
+      } else {
+        alert('¡Ajustes guardados correctamente en la base de datos!');
+        fetchSettings();
+      }
     }
 
     /* Supabase Fetchers */
@@ -710,7 +730,7 @@
         options: { responsive: true, maintainAspectRatio: false }
       });
 
-      // Evolución del Período (MODIFICADO: Agrupación por mes para 'anio' y 'todo')
+      // Evolución del Período (Agrupación por mes para 'anio' y 'todo')
       const timeMap = {};
       const isYearlyOrAll = (filter === 'anio' || filter === 'todo');
 
@@ -792,7 +812,7 @@
       }
     }
 
-    /* Metas de Ahorro con opción de Abono */
+    /* Metas de Ahorro */
     function renderGoals() {
       const container = document.getElementById('settings-goals-list');
       container.innerHTML = '';
