@@ -198,6 +198,12 @@
           </select>
         </div>
 
+        <!-- SECCIÓN NUEVA: MÉTODOS DE PAGO -->
+        <div class="card">
+          <div class="section-title">Totales por Método de Pago</div>
+          <div id="stats-methods-grid" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;"></div>
+        </div>
+
         <div class="card">
           <div class="section-title">Distribución por Categoría</div>
           <div class="chart-box"><canvas id="donutChart"></canvas></div>
@@ -686,6 +692,45 @@
       });
 
       const expenses = filtered.filter(t => t.type === 'GASTO');
+
+      // Cálculo de Métodos de Pago
+      const methodTotals = {
+        'Efectivo': 0,
+        'Débito': 0,
+        'Crédito': 0,
+        'Transferencia': 0
+      };
+
+      expenses.forEach(t => {
+        const m = t.method || 'Efectivo';
+        if (methodTotals[m] !== undefined) {
+          methodTotals[m] += t.amount;
+        } else {
+          methodTotals[m] = t.amount;
+        }
+      });
+
+      const methodsContainer = document.getElementById('stats-methods-grid');
+      if (methodsContainer) {
+        methodsContainer.innerHTML = '';
+        const methodIcons = {
+          'Efectivo': '💵',
+          'Débito': '💳',
+          'Crédito': '💳',
+          'Transferencia': '🏦'
+        };
+
+        Object.keys(methodTotals).forEach(m => {
+          methodsContainer.insertAdjacentHTML('beforeend', `
+            <div style="background:var(--bg-sub); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border); text-align:center;">
+              <span style="font-size:0.75rem; color:var(--text-sub); display:block; font-weight:600; margin-bottom:2px;">${methodIcons[m] || '💰'} ${m}</span>
+              <strong style="font-size:0.95rem; color:var(--text-main);">$${methodTotals[m].toFixed(2)}</strong>
+            </div>
+          `);
+        });
+      }
+
+      // Detalle por Categoría
       const catTotals = {};
       let grandTotal = 0;
 
@@ -694,7 +739,6 @@
         grandTotal += t.amount;
       });
 
-      // Detalle de Gastos
       const listContainer = document.getElementById('stats-category-list');
       listContainer.innerHTML = '';
       const labels = [];
@@ -730,7 +774,7 @@
         options: { responsive: true, maintainAspectRatio: false }
       });
 
-      // Evolución del Período (Agrupación por mes para 'anio' y 'todo')
+      // Evolución del Período
       const timeMap = {};
       const isYearlyOrAll = (filter === 'anio' || filter === 'todo');
 
