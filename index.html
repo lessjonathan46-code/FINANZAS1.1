@@ -89,7 +89,7 @@
     .amount-expense { color: var(--expense); }
     .amount-income { color: var(--income); }
 
-    .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 65px; background-color: var(--bg-main); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 20; padding-bottom: 5px; }
+    .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 65px; background-color: var(--bg-main); border-top: 1px solid var(--border); display: flex; justify-around: space-around; align-items: center; z-index: 20; padding-bottom: 5px; }
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; color: var(--text-sub); font-size: 0.7rem; font-weight: 600; cursor: pointer; width: 20%; }
     .nav-item.active { color: var(--primary-dark); }
     .fab { width: 52px; height: 52px; border-radius: 50%; background-color: var(--primary); color: #FFFFFF; border: none; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(245, 166, 35, 0.4); margin-top: -20px; }
@@ -171,7 +171,7 @@
           </div>
         </div>
 
-        <!-- Acciones rápidas actualizadas: Gasto, Stats, Metas, Exportar -->
+        <!-- Acciones rápidas -->
         <div class="quick-actions">
           <button class="action-btn" onclick="openTransactionModal('GASTO')"><i>💸</i> Gasto</button>
           <button class="action-btn" onclick="switchTab('stats')"><i>📊</i> Stats</button>
@@ -215,29 +215,24 @@
       <!-- 3. HISTORIAL -->
       <section id="screen-history" class="screen">
         <div class="card" style="display:flex; flex-direction:column; gap:8px; padding:12px; margin-bottom:12px;">
-          <!-- 2.1 Buscador por descripción -->
           <input type="text" id="history-search-desc" class="form-control" placeholder="🔍 Buscar por descripción..." oninput="renderHistory()">
           
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-            <!-- 2.2 Filtro por categorías -->
             <select id="history-filter-cat" class="form-control" onchange="renderHistory()">
               <option value="TODAS">Todas las Categorías</option>
             </select>
 
-            <!-- 2.3 Filtro de pagadores -->
             <select id="history-filter-payer" class="form-control" onchange="renderHistory()">
               <option value="TODOS">Todos los Pagadores</option>
             </select>
           </div>
         </div>
 
-        <!-- 2.4 Historial clasificado de acuerdo a su fecha -->
         <div id="history-grouped-list"></div>
       </section>
 
       <!-- 4. AJUSTES -->
       <section id="screen-settings" class="screen">
-        <!-- 1.1 Perfil & Presupuesto -->
         <div class="card">
           <div class="section-title">1.1 Perfil & Presupuesto</div>
           <div class="form-group" style="margin-bottom:8px;">
@@ -254,7 +249,6 @@
           </div>
         </div>
 
-        <!-- 1.2 Metas de Ahorro -->
         <div class="card" id="goals-anchor">
           <div class="section-title">
             <span>1.2 Metas de Ahorro</span>
@@ -263,7 +257,6 @@
           <div id="settings-goals-list" style="display:flex; flex-direction:column; gap:10px;"></div>
         </div>
 
-        <!-- 1.3 Categorías -->
         <div class="card">
           <div class="section-title">
             <span>1.3 Categorías</span>
@@ -272,7 +265,6 @@
           <div id="settings-categories-list" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
         </div>
 
-        <!-- 1.4 Datos & Respaldo -->
         <div class="card">
           <div class="section-title">1.4 Datos & Respaldo</div>
           <div style="display:flex; flex-direction:column; gap:10px;">
@@ -296,7 +288,7 @@
     <!-- MODAL TRANSACCIÓN (+) -->
     <div id="modal-transaction" class="modal-overlay">
       <div class="modal-content">
-        <div style="display:flex; justify-space-between; align-items:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
           <strong id="modal-tx-title">Nueva Transacción</strong>
           <button class="icon-btn" onclick="closeModal('modal-transaction')">✕</button>
         </div>
@@ -329,7 +321,6 @@
           <button class="key-btn op" style="background:#FFE0B2;" onclick="clearKeypad()">C</button>
         </div>
 
-        <!-- 3.1 Lista ampliada de categorías -->
         <div class="form-group">
           <label>Categoría</label>
           <div id="modal-category-grid" class="categories-grid"></div>
@@ -388,6 +379,23 @@
       </div>
     </div>
 
+    <!-- MODAL ABONAR A META -->
+    <div id="modal-deposit" class="modal-overlay">
+      <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong>Abonar a Meta</strong>
+          <button class="icon-btn" onclick="closeModal('modal-deposit')">✕</button>
+        </div>
+        <input type="hidden" id="deposit-goal-id">
+        <p id="deposit-goal-name" style="font-size:0.9rem; font-weight:600; color:var(--text-sub);"></p>
+        <div class="form-group">
+          <label>Monto a Abonar ($)</label>
+          <input type="number" id="deposit-amount" class="form-control" placeholder="Ej: 50" step="0.01">
+        </div>
+        <button class="btn-submit" onclick="saveDeposit()">Realizar Abono</button>
+      </div>
+    </div>
+
     <!-- MODAL NUEVA CATEGORÍA -->
     <div id="modal-add-cat" class="modal-overlay">
       <div class="modal-content">
@@ -422,7 +430,6 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1ZW9mZnV1YXhrb3NwYmduZXh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxODY5MTYsImV4cCI6MjEwMjc2MjkxNn0.jy2HpWniVvTm7gwiVSjmuFNh4jTePaw25xGp8HwYdnQ';
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    /* Categorías por defecto ampliadas (3.1) */
     let categories = [
       { id: 'cat_1', name: 'Comida', icon: '🍔', type: 'GASTO' },
       { id: 'cat_2', name: 'Supermercado', icon: '🛒', type: 'GASTO' },
@@ -529,7 +536,7 @@
       }
     }
 
-    /* Render Dashboard (5.1 & 5.2) */
+    /* Render Dashboard */
     function renderDashboard() {
       const currentMonthStr = new Date().toISOString().substring(0, 7);
       const monthTx = transactions.filter(t => t.date.startsWith(currentMonthStr));
@@ -566,7 +573,6 @@
         statusAmt.className = 'text-red';
       }
 
-      // Transacciones recientes estilo original (5.2)
       const listContainer = document.getElementById('dashboard-tx-list');
       listContainer.innerHTML = '';
 
@@ -591,7 +597,7 @@
       });
     }
 
-    /* Render Historial clasificado por fecha (2.1 - 2.4) */
+    /* Render Historial */
     function renderHistory() {
       const searchDesc = document.getElementById('history-search-desc').value.toLowerCase();
       const filterCat = document.getElementById('history-filter-cat').value;
@@ -604,7 +610,6 @@
         return matchDesc && matchCat && matchPayer;
       });
 
-      // Agrupar por Fecha (2.4)
       const groups = {};
       filtered.forEach(tx => {
         if (!groups[tx.date]) groups[tx.date] = [];
@@ -646,7 +651,7 @@
       });
     }
 
-    /* Render Estadísticas completas (4.1 - 4.3) */
+    /* Render Estadísticas completas */
     function renderStats() {
       const filter = document.getElementById('stats-period-filter').value;
       const now = new Date();
@@ -669,7 +674,7 @@
         grandTotal += t.amount;
       });
 
-      // Detalle de Gastos (4.2)
+      // Detalle de Gastos
       const listContainer = document.getElementById('stats-category-list');
       listContainer.innerHTML = '';
       const labels = [];
@@ -705,10 +710,13 @@
         options: { responsive: true, maintainAspectRatio: false }
       });
 
-      // Evolución del Período (4.3)
+      // Evolución del Período (MODIFICADO: Agrupación por mes para 'anio' y 'todo')
       const timeMap = {};
+      const isYearlyOrAll = (filter === 'anio' || filter === 'todo');
+
       expenses.slice().reverse().forEach(t => {
-        timeMap[t.date] = (timeMap[t.date] || 0) + t.amount;
+        const key = isYearlyOrAll ? t.date.substring(0, 7) : t.date;
+        timeMap[key] = (timeMap[key] || 0) + t.amount;
       });
 
       if (evolutionChartInstance) evolutionChartInstance.destroy();
@@ -716,7 +724,14 @@
         type: 'line',
         data: {
           labels: Object.keys(timeMap),
-          datasets: [{ label: 'Gasto Diario ($)', data: Object.values(timeMap), borderColor: '#F5A623', backgroundColor: 'rgba(245, 166, 35, 0.2)', fill: true, tension: 0.3 }]
+          datasets: [{
+            label: isYearlyOrAll ? 'Gasto Mensual ($)' : 'Gasto Diario ($)',
+            data: Object.values(timeMap),
+            borderColor: '#F5A623',
+            backgroundColor: 'rgba(245, 166, 35, 0.2)',
+            fill: true,
+            tension: 0.3
+          }]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
@@ -777,7 +792,7 @@
       }
     }
 
-    /* Metas de Ahorro (1.2) */
+    /* Metas de Ahorro con opción de Abono */
     function renderGoals() {
       const container = document.getElementById('settings-goals-list');
       container.innerHTML = '';
@@ -800,7 +815,10 @@
             </div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <small style="font-size:0.7rem; color:var(--text-sub);">${pct}% completado</small>
-              <button onclick="deleteGoal('${g.id}')" style="background:none; border:none; color:var(--expense); font-size:0.7rem; cursor:pointer;">Eliminar</button>
+              <div style="display:flex; gap:10px;">
+                <button onclick="openDepositModal('${g.id}')" style="background:none; border:none; color:var(--income); font-weight:700; font-size:0.75rem; cursor:pointer;">💵 Abonar</button>
+                <button onclick="deleteGoal('${g.id}')" style="background:none; border:none; color:var(--expense); font-size:0.7rem; cursor:pointer;">Eliminar</button>
+              </div>
             </div>
           </div>
         `);
@@ -819,6 +837,33 @@
       await db.from('goals').insert({ id: 'goal_' + Date.now(), name, target_amount: target, current_amount: current });
       fetchGoals();
     }
+
+    function openDepositModal(id) {
+      const goal = goals.find(g => g.id === id);
+      if (!goal) return;
+      document.getElementById('deposit-goal-id').value = goal.id;
+      document.getElementById('deposit-goal-name').textContent = `Meta: ${goal.name}`;
+      document.getElementById('deposit-amount').value = '';
+      document.getElementById('modal-deposit').classList.add('active');
+    }
+
+    async function saveDeposit() {
+      const id = document.getElementById('deposit-goal-id').value;
+      const amount = parseFloat(document.getElementById('deposit-amount').value);
+
+      if (isNaN(amount) || amount <= 0) return alert('Ingresa un monto válido para abonar');
+
+      const goal = goals.find(g => g.id === id);
+      if (!goal) return;
+
+      const newAmount = (parseFloat(goal.current_amount) || 0) + amount;
+
+      closeModal('modal-deposit');
+      const { error } = await db.from('goals').update({ current_amount: newAmount }).eq('id', id);
+      if (error) alert('Error al realizar abono: ' + error.message);
+      else fetchGoals();
+    }
+
     async function deleteGoal(id) {
       if (confirm('¿Eliminar meta?')) {
         await db.from('goals').delete().eq('id', id);
@@ -826,7 +871,7 @@
       }
     }
 
-    /* Categorías Ajustes (1.3) */
+    /* Categorías Ajustes */
     function populateCategoryDropdowns() {
       const catSelect = document.getElementById('history-filter-cat');
       catSelect.innerHTML = '<option value="TODAS">Todas las Categorías</option>';
@@ -856,7 +901,7 @@
       renderDashboard();
     }
 
-    /* Datos & Respaldo (1.4) */
+    /* Datos & Respaldo */
     function exportToCSV() {
       if (transactions.length === 0) return alert('No hay datos para exportar');
       let csv = 'ID,Tipo,Monto,Fecha,Categoria,Nota,Pago,Metodo\n';
