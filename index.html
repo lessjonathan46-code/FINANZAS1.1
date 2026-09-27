@@ -61,11 +61,13 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
     .card { background-color: var(--bg-card); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); }
-    .budget-section { display: flex; flex-direction: column; gap: 8px; }
+    .budget-section { display: flex; flex-direction: column; gap: 10px; }
     .budget-header { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 600; }
     .progress-bar-bg { width: 100%; height: 12px; background-color: var(--border); border-radius: 6px; overflow: hidden; }
     .progress-bar-fill { height: 100%; width: 0%; border-radius: 6px; transition: width 0.3s ease, background-color 0.3s ease; }
     .budget-footer { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 500; }
+
+    .person-budget-box { background: var(--bg-sub); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
 
     .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
     .summary-card { background-color: var(--bg-card); padding: 12px 8px; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border); }
@@ -142,17 +144,51 @@
 
       <!-- 1. DASHBOARD -->
       <section id="screen-dashboard" class="screen active">
+        <!-- PRESUPUESTO GLOBAL E INDIVIDUAL -->
         <div class="card budget-section">
           <div class="budget-header">
-            <span>Presupuesto Mensual</span>
+            <span>Presupuesto Total Mensual</span>
             <span id="budget-total-text">$0.00</span>
           </div>
           <div class="progress-bar-bg">
             <div id="budget-progress-bar" class="progress-bar-fill"></div>
           </div>
           <div class="budget-footer">
-            <span id="budget-status-label">Disponible:</span>
+            <span id="budget-status-label">Disponible Total:</span>
             <span id="budget-status-amount">$0.00</span>
+          </div>
+
+          <hr style="border:none; border-top:1px solid var(--border); margin:4px 0;">
+
+          <!-- DESGLOSE INDIVIDUAL -->
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="person-budget-box">
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700;">
+                <span id="dash-p1-name">Persona 1</span>
+                <span id="dash-p1-disp">$0.00</span>
+              </div>
+              <div class="progress-bar-bg" style="height:8px; margin-top:2px;">
+                <div id="dash-p1-bar" class="progress-bar-fill"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-sub); margin-top:2px;">
+                <span id="dash-p1-spent">Gastado: $0.00</span>
+                <span id="dash-p1-budget">Presupuestado: $0.00</span>
+              </div>
+            </div>
+
+            <div class="person-budget-box">
+              <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700;">
+                <span id="dash-p2-name">Persona 2</span>
+                <span id="dash-p2-disp">$0.00</span>
+              </div>
+              <div class="progress-bar-bg" style="height:8px; margin-top:2px;">
+                <div id="dash-p2-bar" class="progress-bar-fill"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-sub); margin-top:2px;">
+                <span id="dash-p2-spent">Gastado: $0.00</span>
+                <span id="dash-p2-budget">Presupuestado: $0.00</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -198,7 +234,6 @@
           </select>
         </div>
 
-        <!-- SECCIÓN NUEVA: MÉTODOS DE PAGO -->
         <div class="card">
           <div class="section-title">Totales por Método de Pago</div>
           <div id="stats-methods-grid" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;"></div>
@@ -240,18 +275,22 @@
       <!-- 4. AJUSTES -->
       <section id="screen-settings" class="screen">
         <div class="card">
-          <div class="section-title">1.1 Perfil & Presupuesto</div>
+          <div class="section-title">1.1 Perfil & Presupuestos</div>
           <div class="form-group" style="margin-bottom:8px;">
             <label>Nombre Persona 1</label>
-            <input type="text" id="cfg-p1" class="form-control">
+            <input type="text" id="cfg-p1" class="form-control" oninput="updateSettingsLabels()">
           </div>
           <div class="form-group" style="margin-bottom:8px;">
             <label>Nombre Persona 2</label>
-            <input type="text" id="cfg-p2" class="form-control">
+            <input type="text" id="cfg-p2" class="form-control" oninput="updateSettingsLabels()">
+          </div>
+          <div class="form-group" style="margin-bottom:8px;">
+            <label id="lbl-cfg-b1">Presupuesto Mensual Persona 1 ($)</label>
+            <input type="number" id="cfg-budget-p1" class="form-control" placeholder="0.00" step="0.01">
           </div>
           <div class="form-group" style="margin-bottom:12px;">
-            <label>Presupuesto Mensual Total ($)</label>
-            <input type="number" id="cfg-budget" class="form-control">
+            <label id="lbl-cfg-b2">Presupuesto Mensual Persona 2 ($)</label>
+            <input type="number" id="cfg-budget-p2" class="form-control" placeholder="0.00" step="0.01">
           </div>
           <button class="btn-submit" style="padding:10px; font-size:0.85rem;" onclick="saveSettingsToDB()">💾 Guardar en Base de Datos</button>
         </div>
@@ -463,7 +502,9 @@
     let config = {
       p1: 'Jonathan',
       p2: 'Pareja',
-      budget: 1500.00
+      budget1: 750.00,
+      budget2: 750.00,
+      get budget() { return this.budget1 + this.budget2; }
     };
 
     let currentTxForm = { id: null, type: 'GASTO', amountStr: '0', categoryId: 'cat_1', paidBy: '' };
@@ -476,7 +517,7 @@
       fetchTransactions();
       fetchGoals();
 
-      // Realtime Subscriptions
+      // Subscripciones Realtime
       db.channel('public:db_changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => fetchTransactions())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, () => fetchGoals())
@@ -491,23 +532,35 @@
         });
     });
 
-    /* Configuración desde Supabase */
+    /* Actualizar dinámicamente labels en Ajustes */
+    function updateSettingsLabels() {
+      const p1 = document.getElementById('cfg-p1').value || 'Persona 1';
+      const p2 = document.getElementById('cfg-p2').value || 'Persona 2';
+      document.getElementById('lbl-cfg-b1').textContent = `Presupuesto Mensual ${p1} ($)`;
+      document.getElementById('lbl-cfg-b2').textContent = `Presupuesto Mensual ${p2} ($)`;
+    }
+
+    /* Obtener Configuración */
     async function fetchSettings() {
       const { data, error } = await db.from('app_config').select('*').eq('id', 'default').single();
       if (!error && data) {
         config.p1 = data.p1 || 'Jonathan';
         config.p2 = data.p2 || 'Pareja';
-        config.budget = parseFloat(data.budget) || 0;
+        config.budget1 = parseFloat(data.budget1) || parseFloat(data.budget) / 2 || 0;
+        config.budget2 = parseFloat(data.budget2) || parseFloat(data.budget) / 2 || 0;
 
         document.getElementById('cfg-p1').value = config.p1;
         document.getElementById('cfg-p2').value = config.p2;
-        document.getElementById('cfg-budget').value = config.budget;
+        document.getElementById('cfg-budget-p1').value = config.budget1;
+        document.getElementById('cfg-budget-p2').value = config.budget2;
 
         document.getElementById('app-title-names').textContent = `${config.p1} & ${config.p2}`;
+        updateSettingsLabels();
         renderPayerChips();
         renderDashboard();
       } else {
         document.getElementById('app-title-names').textContent = `${config.p1} & ${config.p2}`;
+        updateSettingsLabels();
         renderPayerChips();
       }
 
@@ -516,22 +569,26 @@
       populateCategoryDropdowns();
     }
 
+    /* Guardar Ajustes en Supabase */
     async function saveSettingsToDB() {
       const p1 = document.getElementById('cfg-p1').value.trim() || 'Persona 1';
       const p2 = document.getElementById('cfg-p2').value.trim() || 'Persona 2';
-      const budget = parseFloat(document.getElementById('cfg-budget').value) || 0;
+      const b1 = parseFloat(document.getElementById('cfg-budget-p1').value) || 0;
+      const b2 = parseFloat(document.getElementById('cfg-budget-p2').value) || 0;
 
       const { error } = await db.from('app_config').upsert({
         id: 'default',
         p1: p1,
         p2: p2,
-        budget: budget
+        budget1: b1,
+        budget2: b2,
+        budget: b1 + b2
       });
 
       if (error) {
         alert('Error al guardar: ' + error.message);
       } else {
-        alert('¡Ajustes guardados correctamente en la base de datos!');
+        alert('¡Ajustes guardados correctamente!');
         fetchSettings();
       }
     }
@@ -569,10 +626,24 @@
 
       let income = 0;
       let expense = 0;
+      let expenseP1 = 0;
+      let expenseP2 = 0;
 
       monthTx.forEach(t => {
         if (t.type === 'INGRESO') income += t.amount;
-        if (t.type === 'GASTO') expense += t.amount;
+        if (t.type === 'GASTO') {
+          expense += t.amount;
+          if (t.paidBy === config.p1) {
+            expenseP1 += t.amount;
+          } else if (t.paidBy === config.p2) {
+            expenseP2 += t.amount;
+          } else if (t.paidBy === 'Ambos') {
+            expenseP1 += t.amount / 2;
+            expenseP2 += t.amount / 2;
+          } else {
+            expenseP1 += t.amount;
+          }
+        }
       });
 
       const balance = income - expense;
@@ -582,23 +653,54 @@
       document.getElementById('dash-balance').textContent = `$${balance.toFixed(2)}`;
       document.getElementById('dash-balance').className = balance >= 0 ? 'text-green' : 'text-red';
 
-      document.getElementById('budget-total-text').textContent = `$${config.budget.toFixed(2)}`;
-      const pct = config.budget > 0 ? (expense / config.budget) * 100 : 0;
-      const bar = document.getElementById('budget-progress-bar');
-      bar.style.width = `${Math.min(pct, 100)}%`;
-      bar.style.backgroundColor = pct <= 70 ? '#4CAF50' : (pct <= 90 ? '#FFB300' : '#FF5252');
+      // --- PRESUPUESTO GENERAL ---
+      const totalBudget = config.budget1 + config.budget2;
+      document.getElementById('budget-total-text').textContent = `$${totalBudget.toFixed(2)}`;
+      const totalPct = totalBudget > 0 ? (expense / totalBudget) * 100 : 0;
+      const barTotal = document.getElementById('budget-progress-bar');
+      barTotal.style.width = `${Math.min(totalPct, 100)}%`;
+      barTotal.style.backgroundColor = totalPct <= 70 ? '#4CAF50' : (totalPct <= 90 ? '#FFB300' : '#FF5252');
 
       const statusAmt = document.getElementById('budget-status-amount');
-      if (expense <= config.budget) {
-        document.getElementById('budget-status-label').textContent = 'Disponible:';
-        statusAmt.textContent = `$${(config.budget - expense).toFixed(2)}`;
+      if (expense <= totalBudget) {
+        document.getElementById('budget-status-label').textContent = 'Disponible Total:';
+        statusAmt.textContent = `$${(totalBudget - expense).toFixed(2)}`;
         statusAmt.className = 'text-green';
       } else {
-        document.getElementById('budget-status-label').textContent = 'Excedido:';
-        statusAmt.textContent = `$${(expense - config.budget).toFixed(2)}`;
+        document.getElementById('budget-status-label').textContent = 'Excedido Total:';
+        statusAmt.textContent = `$${(expense - totalBudget).toFixed(2)}`;
         statusAmt.className = 'text-red';
       }
 
+      // --- DESGLOSE INDIVIDUAL PERSONA 1 ---
+      document.getElementById('dash-p1-name').textContent = config.p1;
+      document.getElementById('dash-p1-spent').textContent = `Gastado: $${expenseP1.toFixed(2)}`;
+      document.getElementById('dash-p1-budget').textContent = `Base: $${config.budget1.toFixed(2)}`;
+      const dispP1 = config.budget1 - expenseP1;
+      const elDispP1 = document.getElementById('dash-p1-disp');
+      elDispP1.textContent = dispP1 >= 0 ? `Disp: $${dispP1.toFixed(2)}` : `Exc: $${Math.abs(dispP1).toFixed(2)}`;
+      elDispP1.className = dispP1 >= 0 ? 'text-green' : 'text-red';
+
+      const pctP1 = config.budget1 > 0 ? (expenseP1 / config.budget1) * 100 : 0;
+      const barP1 = document.getElementById('dash-p1-bar');
+      barP1.style.width = `${Math.min(pctP1, 100)}%`;
+      barP1.style.backgroundColor = pctP1 <= 70 ? '#4CAF50' : (pctP1 <= 90 ? '#FFB300' : '#FF5252');
+
+      // --- DESGLOSE INDIVIDUAL PERSONA 2 ---
+      document.getElementById('dash-p2-name').textContent = config.p2;
+      document.getElementById('dash-p2-spent').textContent = `Gastado: $${expenseP2.toFixed(2)}`;
+      document.getElementById('dash-p2-budget').textContent = `Base: $${config.budget2.toFixed(2)}`;
+      const dispP2 = config.budget2 - expenseP2;
+      const elDispP2 = document.getElementById('dash-p2-disp');
+      elDispP2.textContent = dispP2 >= 0 ? `Disp: $${dispP2.toFixed(2)}` : `Exc: $${Math.abs(dispP2).toFixed(2)}`;
+      elDispP2.className = dispP2 >= 0 ? 'text-green' : 'text-red';
+
+      const pctP2 = config.budget2 > 0 ? (expenseP2 / config.budget2) * 100 : 0;
+      const barP2 = document.getElementById('dash-p2-bar');
+      barP2.style.width = `${Math.min(pctP2, 100)}%`;
+      barP2.style.backgroundColor = pctP2 <= 70 ? '#4CAF50' : (pctP2 <= 90 ? '#FFB300' : '#FF5252');
+
+      // Lista Transacciones Recientes
       const listContainer = document.getElementById('dashboard-tx-list');
       listContainer.innerHTML = '';
 
@@ -677,7 +779,7 @@
       });
     }
 
-    /* Render Estadísticas completas */
+    /* Render Estadísticas */
     function renderStats() {
       const filter = document.getElementById('stats-period-filter').value;
       const now = new Date();
@@ -693,33 +795,18 @@
 
       const expenses = filtered.filter(t => t.type === 'GASTO');
 
-      // Cálculo de Métodos de Pago
-      const methodTotals = {
-        'Efectivo': 0,
-        'Débito': 0,
-        'Crédito': 0,
-        'Transferencia': 0
-      };
-
+      // Métodos de Pago
+      const methodTotals = { 'Efectivo': 0, 'Débito': 0, 'Crédito': 0, 'Transferencia': 0 };
       expenses.forEach(t => {
         const m = t.method || 'Efectivo';
-        if (methodTotals[m] !== undefined) {
-          methodTotals[m] += t.amount;
-        } else {
-          methodTotals[m] = t.amount;
-        }
+        if (methodTotals[m] !== undefined) methodTotals[m] += t.amount;
+        else methodTotals[m] = t.amount;
       });
 
       const methodsContainer = document.getElementById('stats-methods-grid');
       if (methodsContainer) {
         methodsContainer.innerHTML = '';
-        const methodIcons = {
-          'Efectivo': '💵',
-          'Débito': '💳',
-          'Crédito': '💳',
-          'Transferencia': '🏦'
-        };
-
+        const methodIcons = { 'Efectivo': '💵', 'Débito': '💳', 'Crédito': '💳', 'Transferencia': '🏦' };
         Object.keys(methodTotals).forEach(m => {
           methodsContainer.insertAdjacentHTML('beforeend', `
             <div style="background:var(--bg-sub); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border); text-align:center;">
@@ -733,7 +820,6 @@
       // Detalle por Categoría
       const catTotals = {};
       let grandTotal = 0;
-
       expenses.forEach(t => {
         catTotals[t.categoryId] = (catTotals[t.categoryId] || 0) + t.amount;
         grandTotal += t.amount;
@@ -777,7 +863,6 @@
       // Evolución del Período
       const timeMap = {};
       const isYearlyOrAll = (filter === 'anio' || filter === 'todo');
-
       expenses.slice().reverse().forEach(t => {
         const key = isYearlyOrAll ? t.date.substring(0, 7) : t.date;
         timeMap[key] = (timeMap[key] || 0) + t.amount;
@@ -801,13 +886,14 @@
       });
     }
 
-    /* Modal / Formulario Nueva Transacción */
+    /* Modales & Transacciones */
     function openTransactionModal(type = 'GASTO') {
       currentTxForm = { id: null, type: type, amountStr: '0', categoryId: 'cat_1', paidBy: config.p1 };
       document.getElementById('modal-tx-title').textContent = 'Nueva Transacción';
       document.getElementById('tx-note').value = '';
       setTxType(type);
       updateAmountDisplay();
+      selectPaidBy(config.p1);
       document.getElementById('modal-transaction').classList.add('active');
     }
 
@@ -914,17 +1000,15 @@
     async function saveDeposit() {
       const id = document.getElementById('deposit-goal-id').value;
       const amount = parseFloat(document.getElementById('deposit-amount').value);
-
-      if (isNaN(amount) || amount <= 0) return alert('Ingresa un monto válido para abonar');
+      if (isNaN(amount) || amount <= 0) return alert('Ingresa un monto válido');
 
       const goal = goals.find(g => g.id === id);
       if (!goal) return;
 
       const newAmount = (parseFloat(goal.current_amount) || 0) + amount;
-
       closeModal('modal-deposit');
       const { error } = await db.from('goals').update({ current_amount: newAmount }).eq('id', id);
-      if (error) alert('Error al realizar abono: ' + error.message);
+      if (error) alert('Error: ' + error.message);
       else fetchGoals();
     }
 
@@ -965,7 +1049,7 @@
       renderDashboard();
     }
 
-    /* Datos & Respaldo */
+    /* Exportar & Borrar */
     function exportToCSV() {
       if (transactions.length === 0) return alert('No hay datos para exportar');
       let csv = 'ID,Tipo,Monto,Fecha,Categoria,Nota,Pago,Metodo\n';
@@ -981,7 +1065,7 @@
     }
 
     async function clearAllData() {
-      if (confirm('⚠️ ¿ESTÁS SEGURO? Esto borrará TODAS las transacciones registradas en Supabase.')) {
+      if (confirm('⚠️ ¿ESTÁS SEGURO? Esto borrará TODAS las transacciones en Supabase.')) {
         await db.from('transactions').delete().neq('id', '0');
         fetchTransactions();
       }
